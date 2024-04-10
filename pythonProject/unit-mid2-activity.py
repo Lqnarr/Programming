@@ -1,4 +1,4 @@
-# Calculate the sum of arrays
+# Function: 1. Get the number of a specific item. 2. Printing all the items until the specific item.
 # Author: Eric Gao
 # Date: Apr 10th, 2024
 
