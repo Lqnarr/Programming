@@ -16,6 +16,7 @@ class Pokemon:  # always name classes with capital
         self.weight = 0
         self.height = 0
         self.type = "Normal"
+        self.actual_cry = ""
 
 
 def main():
@@ -57,3 +58,20 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+class child(Pokemon):
+    def __init__(self, name="Arbok"):
+        super().__init__()
+        self.name = name
+        self.id = 24
+        self.type = "Poison"
+        self.actual_cry = "SSSSS!"
+
+    def dragon_breath(self, defender: Pokemon) -> str:
+        response = f"{self.name} used Shed Skin!"
+
+        if defender.type.lower() == "grass":
+            response = response + "and it was super effective."
+        return response
+
+
