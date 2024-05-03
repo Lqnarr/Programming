@@ -27,26 +27,26 @@ class Snowflake(pg.sprite.Sprite):
 
         # Create a blank surface
         self.image = pg.Surface((size, size))
-
-        # Draw a circle inside of it
-        pg.draw.circle(self.image, WHITE, (size // 2, size // 2), size // 2)
-
+        self.image.fill(WHITE)  # Make snowflake white
         self.rect = self.image.get_rect()
 
-        # Spawn it in the middle of the screen
-        # Chooses a random x-coordinate
-        self.rect.centerx = random.randrange(0, WIDTH + 1)
-        self.rect.centery = HEIGHT // 2
+        # Spawn it randomly in the top part of the screen
+        self.rect.centerx = random.randrange(0, WIDTH)
+        self.rect.centery = random.randrange(-50, 0)
+
+        # Randomize falling speed and angle
+        self.speed = random.randint(1, 3)
 
     def update(self):
         """Make the snow fall from top to bottom"""
         # Move the snowflake downwards
-        self.rect.y += 10
+        self.rect.y += self.speed
+
         # If snowflake goes off the screen, reset its position
-        if self.rect.y > HEIGHT:
-            self.rect.y = 0
-            self.rect.centerx = random.randrange(0, WIDTH + 1)
-        
+        if self.rect.top > HEIGHT:
+            self.rect.bottom = 0
+            self.rect.centerx = random.randrange(0, WIDTH)
+            self.speed = random.randint(1, 3)
 
 
 def start():
@@ -62,9 +62,9 @@ def start():
     # All sprites go in this sprite Group
     all_sprites = pg.sprite.Group()
 
-    # Add 100 snowflakes to the all_sprites Group
-    for _ in range(100):
-        all_sprites.add(Snowflake(10))
+    # Add 200 snowflakes to the all_sprites Group
+    for _ in range(200):
+        all_sprites.add(Snowflake(random.randint(5, 10)))
 
     pg.display.set_caption("Snowfall Landscape")
 
