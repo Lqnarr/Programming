@@ -2,120 +2,108 @@
 # Shoot 'em Up
 
 import pygame as pg
+import random
 
-# --CONSTANTS--
-# COLOURS
+# Constants
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
-EMERALD = (21, 219, 147)
-RED = (255, 0, 0)
-GREEN = (0, 255, 0)
-BLUE = (0, 0, 255)
-GRAY = (128, 128, 128)
-
 WIDTH = 720
 HEIGHT = 1000
 SCREEN_SIZE = (WIDTH, HEIGHT)
 
-
-# TODO: Player class
-#   - player's position limited to the bottom part of screen
+# Player class
 class Player(pg.sprite.Sprite):
     def __init__(self):
         super().__init__()
-
-        self.image = pg.image.load("./Images/galaga_ship.png")
-
-        # Scale the image down
-        self.image = pg.transform.scale(
-            self.image, (self.image.get_width() // 2, self.image.get_height() // 2)
-        )
-
+        self.image = pg.image.load("pythonProject/Images/galaga_ship.png").convert()
+        self.image.set_colorkey(WHITE)  # Set white as transparent
         self.rect = self.image.get_rect()
+        self.rect.center = (WIDTH // 2, HEIGHT - 100)
 
     def update(self):
-        """Follow the mouse."""
         self.rect.center = pg.mouse.get_pos()
-
-        # If the top of the hitbox is less than Height - 200
-        # Keep the top at Height - 200
         if self.rect.top < HEIGHT - 200:
             self.rect.top = HEIGHT - 200
 
-
-# TODO: Bullet class
-#   - image of the bullets, picture? pygame rectangle?
-#   - spawn at the player
-#   - vertical movement
+# Bullet class
 class Bullet(pg.sprite.Sprite):
     def __init__(self, player_loc: list):
-        """Player_loc: xy coordinates of the centerx and top of player"""
         super().__init__()
-
         self.image = pg.Surface((10, 25))
-        self.image.fill(GREEN)
-
+        self.image.fill(WHITE)
         self.rect = self.image.get_rect()
-
-        # Set its initial pos to the players centerx and top
         self.rect.centerx = player_loc[0]
         self.rect.bottom = player_loc[1]
 
+    def update(self):
+        self.rect.y -= 10  # Move bullet upwards
+        if self.rect.bottom < 0:  # Remove if off-screen
+            self.kill()
 
+# Enemy class
+class Enemy(pg.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.image = pg.Surface((50, 50))  # Placeholder image
+        self.image.fill((255, 0, 0))  # Red color for enemy
+        self.rect = self.image.get_rect()
+        self.rect.x = random.randrange(WIDTH - self.rect.width)
+        self.rect.y = random.randrange(-100, -40)
+        self.speedx = random.randrange(-3, 3)  # Random horizontal speed
 
-# TODO: Enemy class
-#   - side to side movement
-#   - keep it inside the screen
+    def update(self):
+        self.rect.y += 5  # Move enemy downwards
+        self.rect.x += self.speedx  # Move enemy horizontally
 
+        # Wrap around the screen if the enemy goes off-screen
+        if self.rect.top > HEIGHT + 10 or self.rect.left < -25 or self.rect.right > WIDTH + 20:
+            self.rect.x = random.randrange(WIDTH - self.rect.width)
+            self.rect.y = random.randrange(-100, -40)
+            self.speedx = random.randrange(-3, 3)  # Random horizontal speed
 
 def start():
-    """Environment Setup and Game Loop"""
-
     pg.init()
-
-    # --Game State Variables--
     screen = pg.display.set_mode(SCREEN_SIZE)
     done = False
     clock = pg.time.Clock()
 
-    # All sprites go in this sprite Group
     all_sprites = pg.sprite.Group()
+    bullets = pg.sprite.Group()
+    enemies = pg.sprite.Group()
 
     player = Player()
-
     all_sprites.add(player)
 
     pg.display.set_caption("Shoot 'Em Up")
 
-    # --Main Loop--
     while not done:
-        # --- Event Listener
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 done = True
             if event.type == pg.MOUSEBUTTONDOWN:
-                all_sprites.add(Bullet((player.rect.centerx, player.rect.top)))
+                bullets.add(Bullet(player.rect.midtop))
 
-        # --- Update the world state
         all_sprites.update()
+        bullets.update()
 
-        # --- Draw items
+        # Spawning enemies
+        if len(enemies) < 10:  # Limit number of enemies on screen
+            new_enemy = Enemy()
+            all_sprites.add(new_enemy)
+            enemies.add(new_enemy)
+
+        # Check for collisions between bullets and enemies
+        hits = pg.sprite.groupcollide(enemies, bullets, True, True)
+
         screen.fill(BLACK)
-
         all_sprites.draw(screen)
+        bullets.draw(screen)
+        enemies.draw(screen)
 
-        # Update the screen with anything new
         pg.display.flip()
-
-        # --- Tick the Clock
-        clock.tick(60)  # 60 fps
+        clock.tick(60)
 
     pg.quit()
 
-
-def main():
-    start()
-
-
 if __name__ == "__main__":
-    main()
+    start()
