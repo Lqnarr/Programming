@@ -26,6 +26,41 @@ MOVE_VEL = 20
 WINDOW = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("2048")
 
+def draw_starting_screen(window):
+    window.fill(BACKGROUND_COLOR)
+    title_font = pygame.font.SysFont("Arial", 80, bold=True)
+    button_font = pygame.font.SysFont("Arial", 50, bold=True)
+    
+    title_text = title_font.render("2048", 1, FONT_COLOR)
+    easy_text = button_font.render("Easy", 1, FONT_COLOR)
+    hard_text = button_font.render("Hard", 1, FONT_COLOR)
+    
+    title_rect = title_text.get_rect(center=(WIDTH // 2, HEIGHT // 3))
+    easy_rect = easy_text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+    hard_rect = hard_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 100))
+    
+    window.blit(title_text, title_rect)
+    window.blit(easy_text, easy_rect)
+    window.blit(hard_text, hard_rect)
+    
+    pygame.display.update()
+    
+    return easy_rect, hard_rect
+
+def select_difficulty():
+    while True:
+        easy_rect, hard_rect = draw_starting_screen(WINDOW)
+        
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                return None
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if easy_rect.collidepoint(event.pos):
+                    return "easy"
+                elif hard_rect.collidepoint(event.pos):
+                    return "hard"
+
 
 class Tile:
     COLORS = [
@@ -117,7 +152,7 @@ def get_random_pos(tiles):
     return row, col
 
 
-def move_tiles(window, tiles, clock, direction):
+def move_tiles(window, tiles, clock, direction, difficulty):
     global score
     updated = True
     blocks = set()
@@ -201,17 +236,23 @@ def move_tiles(window, tiles, clock, direction):
 
         update_tiles(window, tiles, sorted_tiles)
 
-    return end_move(tiles)
+    return end_move(tiles, difficulty)
 
 
-def end_move(tiles):
+def end_move(tiles, difficulty):
     if len(tiles) == 16:
         return "lost"
 
-    row, col = get_random_pos(tiles)
-    tiles[f"{row}{col}"] = Tile(random.choice([2, 4]), row, col)
-    return "continue"
+    elif len(tiles) == 15:
+        num_new_tiles = 1
+    else:
+        num_new_tiles = 1 if difficulty == "easy" else 2
 
+    for _ in range(num_new_tiles):
+        row, col = get_random_pos(tiles)
+        tiles[f"{row}{col}"] = Tile(random.choice([2, 4]), row, col)
+    
+    return "continue"
 
 def update_tiles(window, tiles, sorted_tiles):
     tiles.clear()
@@ -234,6 +275,10 @@ def main(window):
     clock = pygame.time.Clock()
     run = True
 
+    difficulty = select_difficulty()
+    if not difficulty:
+        return
+
     tiles = generate_tiles()
 
     while run:
@@ -246,17 +291,18 @@ def main(window):
 
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
-                    move_tiles(window, tiles, clock, "left")
+                    move_tiles(window, tiles, clock, "left", difficulty)
                 if event.key == pygame.K_RIGHT:
-                    move_tiles(window, tiles, clock, "right")
+                    move_tiles(window, tiles, clock, "right", difficulty)
                 if event.key == pygame.K_UP:
-                    move_tiles(window, tiles, clock, "up")
+                    move_tiles(window, tiles, clock, "up", difficulty)
                 if event.key == pygame.K_DOWN:
-                    move_tiles(window, tiles, clock, "down")
+                    move_tiles(window, tiles, clock, "down", difficulty)
 
         draw(window, tiles)
 
     pygame.quit()
+
 
 
 if __name__ == "__main__":
