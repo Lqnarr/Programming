@@ -4,7 +4,7 @@ import math
 
 pygame.init()
 
-FPS = 60
+FPS = 90
 
 score = 2
 
